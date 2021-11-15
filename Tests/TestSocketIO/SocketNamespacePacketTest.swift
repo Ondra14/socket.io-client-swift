@@ -6,10 +6,10 @@
 //
 //
 
-import XCTest
 @testable import SocketIO
+import XCTest
 
-class SocketNamespacePacketTest : XCTestCase {
+class SocketNamespacePacketTest: XCTestCase {
     func testEmptyEmit() {
         let sendData: [Any] = ["test"]
         let packet = SocketPacket.packetFromEmit(sendData, id: -1, nsp: "/swift", ack: false)
@@ -70,7 +70,7 @@ class SocketNamespacePacketTest : XCTestCase {
         XCTAssertEqual(packet.binary, [data])
         XCTAssertTrue(compareAnyArray(input: parsed.data, expected: [
             "test",
-            ["_placeholder": true, "num": 0]
+            ["_placeholder": true, "num": 0],
         ]))
     }
 
@@ -111,7 +111,7 @@ class SocketNamespacePacketTest : XCTestCase {
         XCTAssertEqual(parsed.id, 0)
         XCTAssertTrue(compareAnyArray(input: parsed.data, expected: [
             "test",
-            ["_placeholder": true, "num": 0]
+            ["_placeholder": true, "num": 0],
         ]))
     }
 
@@ -167,7 +167,7 @@ class SocketNamespacePacketTest : XCTestCase {
         XCTAssertEqual(parsed.nsp, "/swift")
         XCTAssertEqual(parsed.id, 0)
         XCTAssertTrue(compareAnyArray(input: parsed.data, expected: [
-            ["_placeholder": true, "num": 0]
+            ["_placeholder": true, "num": 0],
         ]))
     }
 

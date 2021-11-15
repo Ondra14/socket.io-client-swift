@@ -26,7 +26,7 @@
 import Foundation
 
 /// A struct that represents a socket.io packet.
-public struct SocketPacket : CustomStringConvertible {
+public struct SocketPacket: CustomStringConvertible {
     // MARK: Properties
 
     private static let logType = "SocketPacket"
@@ -77,7 +77,8 @@ public struct SocketPacket : CustomStringConvertible {
     }
 
     init(type: PacketType, data: [Any] = [Any](), id: Int = -1, nsp: String, placeholders: Int = 0,
-         binary: [Data] = [Data]()) {
+         binary: [Data] = [Data]())
+    {
         self.data = data
         self.id = id
         self.nsp = nsp
@@ -142,9 +143,9 @@ public struct SocketPacket : CustomStringConvertible {
             if dict["_placeholder"] as? Bool ?? false {
                 return binary[dict["num"] as! Int]
             } else {
-                return dict.reduce(into: JSON(), {cur, keyValue in
+                return dict.reduce(into: JSON()) { cur, keyValue in
                     cur[keyValue.0] = _fillInPlaceholders(keyValue.1)
-                })
+                }
             }
         case let arr as [Any]:
             return arr.map(_fillInPlaceholders)
@@ -230,11 +231,11 @@ private extension SocketPacket {
 
             return placeholder
         case let arr as [Any]:
-            return arr.map({shred($0, binary: &binary)})
+            return arr.map { shred($0, binary: &binary) }
         case let dict as JSON:
-            return dict.reduce(into: JSON(), {cur, keyValue in
+            return dict.reduce(into: JSON()) { cur, keyValue in
                 cur[keyValue.0] = shred(keyValue.1, binary: &binary)
-            })
+            }
         default:
             return data
         }
@@ -245,6 +246,6 @@ private extension SocketPacket {
     static func deconstructData(_ data: [Any]) -> ([Any], [Data]) {
         var binary = [Data]()
 
-        return (data.map({ shred($0, binary: &binary) }), binary)
+        return (data.map { shred($0, binary: &binary) }, binary)
     }
 }

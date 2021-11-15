@@ -6,10 +6,10 @@
 //
 //
 
-import XCTest
 @testable import SocketIO
+import XCTest
 
-class SocketBasicPacketTest : XCTestCase {
+class SocketBasicPacketTest: XCTestCase {
     func testEmptyEmit() {
         let sendData = ["test"]
         let packetStr = SocketPacket.packetFromEmit(sendData, id: -1, nsp: "/", ack: false).packetString
@@ -20,7 +20,7 @@ class SocketBasicPacketTest : XCTestCase {
     }
 
     func testNullEmit() {
-		let sendData: [Any] = ["test", NSNull()]
+        let sendData: [Any] = ["test", NSNull()]
         let packetStr = SocketPacket.packetFromEmit(sendData, id: -1, nsp: "/", ack: false).packetString
         let parsed = parser.parseSocketMessage(packetStr)!
 
@@ -73,7 +73,7 @@ class SocketBasicPacketTest : XCTestCase {
         XCTAssertEqual(packet.binary, [data])
         XCTAssertTrue(compareAnyArray(input: parsed.data, expected: [
             "test",
-            ["_placeholder": true, "num": 0]
+            ["_placeholder": true, "num": 0],
         ]))
     }
 
@@ -111,7 +111,7 @@ class SocketBasicPacketTest : XCTestCase {
         XCTAssertEqual(parsed.id, 0)
         XCTAssertTrue(compareAnyArray(input: parsed.data, expected: [
             "test",
-            ["_placeholder": true, "num": 0]
+            ["_placeholder": true, "num": 0],
         ]))
         XCTAssertEqual(packet.binary, [data])
     }
@@ -165,7 +165,7 @@ class SocketBasicPacketTest : XCTestCase {
         XCTAssertEqual(packet.binary, [data])
         XCTAssertEqual(parsed.id, 0)
         XCTAssertTrue(compareAnyArray(input: parsed.data, expected: [
-            ["_placeholder": true, "num": 0]
+            ["_placeholder": true, "num": 0],
         ]))
     }
 

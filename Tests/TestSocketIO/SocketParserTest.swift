@@ -6,8 +6,8 @@
 //
 //
 
-import XCTest
 @testable import SocketIO
+import XCTest
 
 class SocketParserTest: XCTestCase {
     func testDisconnect() {
@@ -88,11 +88,9 @@ class SocketParserTest: XCTestCase {
     func testInvalidInput() {
         let message = "8"
         do {
-            let _ = try testManager.parseString(message)
+            _ = try testManager.parseString(message)
             XCTFail()
-        } catch {
-
-        }
+        } catch {}
     }
 
     func testGenericParser() {
@@ -126,7 +124,7 @@ class SocketParserTest: XCTestCase {
 
     let testManager = SocketManager(socketURL: URL(string: "http://localhost/")!)
 
-    //Format key: message; namespace-data-binary-id
+    // Format key: message; namespace-data-binary-id
     static let packetTypes: [String: (String, [Any], [Data], Int)] = [
         "0": ("/", [], [], -1), "1": ("/", [], [], -1),
         "25[\"test\"]": ("/", ["test"], [], 5),
@@ -135,13 +133,13 @@ class SocketParserTest: XCTestCase {
         "51-/swift,[\"testMultipleItemsWithBufferEmitReturn\",[1,2],{\"test\":\"bob\"},25,\"polo\",{\"_placeholder\":true,\"num\":0}]": ("/swift", ["testMultipleItemsWithBufferEmitReturn", [1, 2] as NSArray, ["test": "bob"] as NSDictionary, 25, "polo", ["_placeholder": true, "num": 0] as NSDictionary], [], -1),
         "3/swift,0[[\"test3\",\"test4\"]]": ("/swift", [["test3", "test4"] as NSArray], [], 0),
         "61-/swift,19[[1,2],{\"test\":\"bob\"},25,\"polo\",{\"_placeholder\":true,\"num\":0}]":
-        ("/swift", [ [1, 2] as NSArray, ["test": "bob"] as NSDictionary, 25, "polo", ["_placeholder": true, "num": 0] as NSDictionary], [], 19),
+            ("/swift", [[1, 2] as NSArray, ["test": "bob"] as NSDictionary, 25, "polo", ["_placeholder": true, "num": 0] as NSDictionary], [], 19),
         "4/swift,": ("/swift", [], [], -1),
         "0/swift": ("/swift", [], [], -1),
         "1/swift": ("/swift", [], [], -1),
         "4\"ERROR\"": ("/", ["ERROR"], [], -1),
         "4{\"test\":2}": ("/", [["test": 2]], [], -1),
         "41": ("/", [1], [], -1),
-        "4[1, \"hello\"]": ("/", [1, "hello"], [], -1)
+        "4[1, \"hello\"]": ("/", [1, "hello"], [], -1),
     ]
 }

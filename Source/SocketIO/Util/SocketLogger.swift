@@ -25,7 +25,7 @@
 import Foundation
 
 /// Represents a class will log client events.
-public protocol SocketLogger : AnyObject {
+public protocol SocketLogger: AnyObject {
     // MARK: Properties
 
     /// Whether to log or not
@@ -68,7 +68,7 @@ public extension SocketLogger {
     }
 }
 
-class DefaultSocketLogger : SocketLogger {
+class DefaultSocketLogger: SocketLogger {
     static var Logger: SocketLogger = DefaultSocketLogger()
 
     var log = false

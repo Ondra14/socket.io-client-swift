@@ -26,7 +26,7 @@ import Foundation
 
 /// Represents state of a manager or client.
 @objc
-public enum SocketIOStatus : Int, CustomStringConvertible {
+public enum SocketIOStatus: Int, CustomStringConvertible {
     // MARK: Cases
 
     /// The client/manager has never been connected. Or the client has been reset.
@@ -50,8 +50,8 @@ public enum SocketIOStatus : Int, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .connected:    return "connected"
-        case .connecting:   return "connecting"
+        case .connected: return "connected"
+        case .connecting: return "connecting"
         case .disconnected: return "disconnected"
         case .notConnected: return "notConnected"
         }

@@ -6,10 +6,10 @@
 //
 //
 
-import XCTest
 import SocketIO
+import XCTest
 
-class TestSocketIOClientConfiguration : XCTestCase {
+class TestSocketIOClientConfiguration: XCTestCase {
     func testReplaceSameOption() {
         config.insert(.log(true))
 

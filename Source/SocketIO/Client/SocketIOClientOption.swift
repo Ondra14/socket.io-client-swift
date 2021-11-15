@@ -34,12 +34,12 @@ public enum SocketIOVersion: Int {
     case three = 3
 }
 
-protocol ClientOption : CustomStringConvertible, Equatable {
+protocol ClientOption: CustomStringConvertible, Equatable {
     func getSocketIOOptionValue() -> Any
 }
 
 /// The options for a client.
-public enum SocketIOClientOption : ClientOption {
+public enum SocketIOClientOption: ClientOption {
     /// If given, the WebSocket transport will attempt to use compression.
     case compress
 
@@ -213,7 +213,7 @@ public enum SocketIOClientOption : ClientOption {
             value = delegate
         case let .enableSOCKSProxy(enable):
             value = enable
-        case let.version(versionNum):
+        case let .version(versionNum):
             value = versionNum
         }
 
@@ -227,8 +227,7 @@ public enum SocketIOClientOption : ClientOption {
     /// - parameter lhs: Left operand to compare.
     /// - parameter rhs: Right operand to compare.
     /// - returns: `true` if the two are the same option.
-    public static func ==(lhs: SocketIOClientOption, rhs: SocketIOClientOption) -> Bool {
+    public static func == (lhs: SocketIOClientOption, rhs: SocketIOClientOption) -> Bool {
         return lhs.description == rhs.description
     }
-
 }

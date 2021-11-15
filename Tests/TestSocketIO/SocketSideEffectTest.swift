@@ -6,9 +6,9 @@
 //
 //
 
-import XCTest
 @testable import SocketIO
 import Starscream
+import XCTest
 
 class SocketSideEffectTest: XCTestCase {
     func testInitialCurrentAck() {
@@ -16,13 +16,13 @@ class SocketSideEffectTest: XCTestCase {
     }
 
     func testFirstAck() {
-        socket.emitWithAck("test").timingOut(after: 0) {data in}
+        socket.emitWithAck("test").timingOut(after: 0) { _ in }
         XCTAssertEqual(socket.currentAck, 0)
     }
 
     func testSecondAck() {
-        socket.emitWithAck("test").timingOut(after: 0) {data in}
-        socket.emitWithAck("test").timingOut(after: 0) {data in}
+        socket.emitWithAck("test").timingOut(after: 0) { _ in }
+        socket.emitWithAck("test").timingOut(after: 0) { _ in }
 
         XCTAssertEqual(socket.currentAck, 1)
     }
@@ -34,7 +34,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleAck() {
         let expect = expectation(description: "handled ack")
-        socket.emitWithAck("test").timingOut(after: 0) {data in
+        socket.emitWithAck("test").timingOut(after: 0) { data in
             XCTAssertEqual(data[0] as? String, "hello world")
             expect.fulfill()
         }
@@ -45,10 +45,10 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleAckWithAckEmit() {
         let expect = expectation(description: "handled ack")
-        socket.emitWithAck("test").timingOut(after: 0) {data in
+        socket.emitWithAck("test").timingOut(after: 0) { data in
             XCTAssertEqual(data[0] as? String, "hello world")
 
-            self.socket.emitWithAck("test").timingOut(after: 0) {data in}
+            self.socket.emitWithAck("test").timingOut(after: 0) { _ in }
             expect.fulfill()
         }
 
@@ -58,7 +58,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleAck2() {
         let expect = expectation(description: "handled ack2")
-        socket.emitWithAck("test").timingOut(after: 0) {data in
+        socket.emitWithAck("test").timingOut(after: 0) { data in
             XCTAssertTrue(data.count == 2, "Wrong number of ack items")
             expect.fulfill()
         }
@@ -70,7 +70,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleEvent() {
         let expect = expectation(description: "handled event")
-        socket.on("test") {data, ack in
+        socket.on("test") { data, _ in
             XCTAssertEqual(data[0] as? String, "hello world")
             expect.fulfill()
         }
@@ -81,7 +81,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleStringEventWithQuotes() {
         let expect = expectation(description: "handled event")
-        socket.on("test") {data, ack in
+        socket.on("test") { data, _ in
             XCTAssertEqual(data[0] as? String, "\"hello world\"")
             expect.fulfill()
         }
@@ -92,7 +92,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleOnceEvent() {
         let expect = expectation(description: "handled event")
-        socket.once("test") {data, ack in
+        socket.once("test") { data, _ in
             XCTAssertEqual(data[0] as? String, "hello world")
             XCTAssertEqual(self.socket.testHandlers.count, 0)
             expect.fulfill()
@@ -107,7 +107,7 @@ class SocketSideEffectTest: XCTestCase {
 
         socket.setTestStatus(.connecting)
 
-        socket.once(clientEvent: .connect) {data, ack in
+        socket.once(clientEvent: .connect) { _, _ in
             XCTAssertEqual(self.socket.testHandlers.count, 0)
             expect.fulfill()
         }
@@ -121,16 +121,16 @@ class SocketSideEffectTest: XCTestCase {
     }
 
     func testOffWithEvent() {
-        socket.on("test") {data, ack in }
-        socket.on("test") {data, ack in }
+        socket.on("test") { _, _ in }
+        socket.on("test") { _, _ in }
         XCTAssertEqual(socket.testHandlers.count, 2)
         socket.off("test")
         XCTAssertEqual(socket.testHandlers.count, 0)
     }
 
     func testOffClientEvent() {
-        socket.on(clientEvent: .connect) {data, ack in }
-        socket.on(clientEvent: .disconnect) {data, ack in }
+        socket.on(clientEvent: .connect) { _, _ in }
+        socket.on(clientEvent: .disconnect) { _, _ in }
         XCTAssertEqual(socket.testHandlers.count, 2)
         socket.off(clientEvent: .disconnect)
         XCTAssertEqual(socket.testHandlers.count, 1)
@@ -138,9 +138,9 @@ class SocketSideEffectTest: XCTestCase {
     }
 
     func testOffWithId() {
-        let handler = socket.on("test") {data, ack in }
+        let handler = socket.on("test") { _, _ in }
         XCTAssertEqual(socket.testHandlers.count, 1)
-        socket.on("test") {data, ack in }
+        socket.on("test") { _, _ in }
         XCTAssertEqual(socket.testHandlers.count, 2)
         socket.off(id: handler)
         XCTAssertEqual(socket.testHandlers.count, 1)
@@ -148,7 +148,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandlesErrorPacket() {
         let expect = expectation(description: "Handled error")
-        socket.on("error") {data, ack in
+        socket.on("error") { data, _ in
             if let error = data[0] as? String, error == "test error" {
                 expect.fulfill()
             }
@@ -160,7 +160,7 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleBinaryEvent() {
         let expect = expectation(description: "handled binary event")
-        socket.on("test") {data, ack in
+        socket.on("test") { data, _ in
             if let dict = data[0] as? [String: Any], let data = dict["test"] as? Data {
                 XCTAssertEqual(data as Data, self.data)
                 expect.fulfill()
@@ -174,9 +174,10 @@ class SocketSideEffectTest: XCTestCase {
 
     func testHandleMultipleBinaryEvent() {
         let expect = expectation(description: "handled multiple binary event")
-        socket.on("test") {data, ack in
+        socket.on("test") { data, _ in
             if let dict = data[0] as? [String: Any], let data = dict["test"] as? Data,
-               let data2 = dict["test2"] as? Data {
+               let data2 = dict["test2"] as? Data
+            {
                 XCTAssertEqual(data as Data, self.data)
                 XCTAssertEqual(data2 as Data, self.data2)
                 expect.fulfill()
@@ -193,7 +194,7 @@ class SocketSideEffectTest: XCTestCase {
         let expect = expectation(description: "The client should announce when the status changes")
         let statusChange = SocketIOStatus.connecting
 
-        socket.on("statusChange") {data, ack in
+        socket.on("statusChange") { data, _ in
             guard let status = data[0] as? SocketIOStatus else {
                 XCTFail("Status should be one of the defined statuses")
 
@@ -215,7 +216,7 @@ class SocketSideEffectTest: XCTestCase {
         let event = SocketClientEvent.disconnect
         let closeReason = "testing"
 
-        socket.on(clientEvent: event) {data, ack in
+        socket.on(clientEvent: event) { data, _ in
             guard let reason = data[0] as? String else {
                 XCTFail("Client should pass data for client events")
 
@@ -237,7 +238,7 @@ class SocketSideEffectTest: XCTestCase {
         let event = SocketClientEvent.disconnect
         let closeReason = "testing"
 
-        socket.on("disconnect") {data, ack in
+        socket.on("disconnect") { data, _ in
             guard let reason = data[0] as? String else {
                 XCTFail("Client should pass data for client events")
 
@@ -274,7 +275,7 @@ class SocketSideEffectTest: XCTestCase {
         socket.setTestStatus(.notConnected)
         manager.engine = TestEngine(client: manager, url: manager.socketURL, options: nil)
 
-        socket.on(clientEvent: .connect) {data, ack in
+        socket.on(clientEvent: .connect) { _, _ in
             expect.fulfill()
         }
 
@@ -301,7 +302,7 @@ class SocketSideEffectTest: XCTestCase {
         manager.engine = eng
         socket.setTestStatus(.notConnected)
 
-        socket.on(clientEvent: .connect) {data, ack in
+        socket.on(clientEvent: .connect) { _, _ in
             expect.fulfill()
         }
 
@@ -320,7 +321,7 @@ class SocketSideEffectTest: XCTestCase {
         socket.setTestStatus(.notConnected)
         manager.engine = TestEngine(client: manager, url: manager.socketURL, options: nil)
 
-        socket.on(clientEvent: .connect) {data, ack in
+        socket.on(clientEvent: .connect) { data, _ in
             guard let nsp = data[0] as? String else {
                 XCTFail("Connect should be called with a namespace")
 
@@ -346,11 +347,12 @@ class SocketSideEffectTest: XCTestCase {
 
     func testErrorInCustomSocketDataCallsErrorHandler() {
         let expect = expectation(description: "The client should call the error handler for emit errors because of " +
-                                              "custom data")
+            "custom data")
 
-        socket.on(clientEvent: .error) {data, ack in
+        socket.on(clientEvent: .error) { data, _ in
             guard data.count == 3, data[0] as? String == "myEvent",
-                  data[2] is ThrowingData.ThrowingError else {
+                  data[2] is ThrowingData.ThrowingError
+            else {
                 XCTFail("Incorrect error call")
 
                 return
@@ -366,11 +368,12 @@ class SocketSideEffectTest: XCTestCase {
 
     func testErrorInCustomSocketDataCallsErrorHandler_ack() {
         let expect = expectation(description: "The client should call the error handler for emit errors because of " +
-                                              "custom data")
+            "custom data")
 
-        socket.on(clientEvent: .error) {data, ack in
+        socket.on(clientEvent: .error) { data, _ in
             guard data.count == 3, data[0] as? String == "myEvent",
-                  data[2] is ThrowingData.ThrowingError else {
+                  data[2] is ThrowingData.ThrowingError
+            else {
                 XCTFail("Incorrect error call")
 
                 return
@@ -379,7 +382,7 @@ class SocketSideEffectTest: XCTestCase {
             expect.fulfill()
         }
 
-        socket.emitWithAck("myEvent", ThrowingData()).timingOut(after: 0.8, callback: {_ in
+        socket.emitWithAck("myEvent", ThrowingData()).timingOut(after: 0.8, callback: { _ in
             XCTFail("Ack callback should not be called")
         })
 
@@ -418,7 +421,7 @@ class SocketSideEffectTest: XCTestCase {
     func testClientCallsSentPingHandler() {
         let expect = expectation(description: "The client should emit a ping event")
 
-        socket.on(clientEvent: .pong) {data, ack in
+        socket.on(clientEvent: .pong) { _, _ in
             expect.fulfill()
         }
 
@@ -430,7 +433,7 @@ class SocketSideEffectTest: XCTestCase {
     func testClientCallsGotPongHandler() {
         let expect = expectation(description: "The client should emit a pong event")
 
-        socket.on(clientEvent: .ping) {data, ack in
+        socket.on(clientEvent: .ping) { _, _ in
             expect.fulfill()
         }
 
@@ -455,14 +458,13 @@ class SocketSideEffectTest: XCTestCase {
 }
 
 struct ThrowingData: SocketData {
-    enum ThrowingError : Error {
+    enum ThrowingError: Error {
         case error
     }
 
     func socketRepresentation() throws -> SocketData {
         throw ThrowingError.error
     }
-
 }
 
 class TestEngine: SocketEngineSpec {
@@ -470,10 +472,10 @@ class TestEngine: SocketEngineSpec {
     private(set) var closed = false
     private(set) var compress = false
     private(set) var connected = false
-    var connectParams: [String: Any]? = nil
-    private(set) var cookies: [HTTPCookie]? = nil
+    var connectParams: [String: Any]?
+    private(set) var cookies: [HTTPCookie]?
     private(set) var engineQueue = DispatchQueue.main
-    var extraHeaders: [String: String]? = nil
+    var extraHeaders: [String: String]?
     private(set) var fastUpgrade = false
     private(set) var forcePolling = false
     private(set) var forceWebsockets = false
@@ -484,12 +486,12 @@ class TestEngine: SocketEngineSpec {
     private(set) var urlPolling = URL(string: "http://localhost/")!
     private(set) var urlWebSocket = URL(string: "http://localhost/")!
     private(set) var websocket = false
-    private(set) var ws: WebSocket? = nil
+    private(set) var ws: WebSocket?
     private(set) var version = SocketIOVersion.three
 
-    fileprivate var onConnect: (() -> ())?
+    fileprivate var onConnect: (() -> Void)?
 
-    required init(client: SocketEngineClient, url: URL, options: [String: Any]?) {
+    required init(client: SocketEngineClient, url _: URL, options _: [String: Any]?) {
         self.client = client
     }
 
@@ -497,11 +499,11 @@ class TestEngine: SocketEngineSpec {
         onConnect?()
     }
 
-    func didError(reason: String) { }
-    func disconnect(reason: String) { }
-    func doFastUpgrade() { }
-    func flushWaitingForPostToWebSocket() { }
-    func parseEngineData(_ data: Data) { }
-    func parseEngineMessage(_ message: String) { }
-    func write(_ msg: String, withType type: SocketEnginePacketType, withData data: [Data], completion: (() -> ())?) { }
+    func didError(reason _: String) {}
+    func disconnect(reason _: String) {}
+    func doFastUpgrade() {}
+    func flushWaitingForPostToWebSocket() {}
+    func parseEngineData(_: Data) {}
+    func parseEngineMessage(_: String) {}
+    func write(_: String, withType _: SocketEnginePacketType, withData _: [Data], completion _: (() -> Void)?) {}
 }

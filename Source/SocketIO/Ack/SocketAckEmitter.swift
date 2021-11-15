@@ -28,7 +28,7 @@ import Foundation
 /// A class that represents a waiting ack call.
 ///
 /// **NOTE**: You should not store this beyond the life of the event handler.
-public final class SocketAckEmitter : NSObject {
+public final class SocketAckEmitter: NSObject {
     private unowned let socket: SocketIOClient
     private let ackNum: Int
 
@@ -74,7 +74,7 @@ public final class SocketAckEmitter : NSObject {
         guard ackNum != -1 else { return }
 
         do {
-            socket.emitAck(ackNum, with: try items.map({ try $0.socketRepresentation() }))
+            socket.emitAck(ackNum, with: try items.map { try $0.socketRepresentation() })
         } catch {
             socket.handleClientEvent(.error, data: [ackNum, items, error])
         }
@@ -89,7 +89,6 @@ public final class SocketAckEmitter : NSObject {
 
         socket.emitAck(ackNum, with: items)
     }
-
 }
 
 /// A class that represents an emit that will request an ack that has not yet been sent.
@@ -101,7 +100,7 @@ public final class SocketAckEmitter : NSObject {
 ///     ...
 /// }
 /// ```
-public final class OnAckCallback : NSObject {
+public final class OnAckCallback: NSObject {
     private let ackNumber: Int
     private let binary: Bool
     private let items: [Any]
@@ -129,18 +128,17 @@ public final class OnAckCallback : NSObject {
     ///                       To check for timeout, use `SocketAckStatus`'s `noAck` case.
     @objc
     public func timingOut(after seconds: Double, callback: @escaping AckCallback) {
-        guard let socket = self.socket, ackNumber != -1 else { return }
+        guard let socket = socket, ackNumber != -1 else { return }
 
         socket.ackHandlers.addAck(ackNumber, callback: callback)
         socket.emit(items, ack: ackNumber, binary: binary)
 
         guard seconds != 0 else { return }
 
-        socket.manager?.handleQueue.asyncAfter(deadline: DispatchTime.now() + seconds) {[weak socket] in
+        socket.manager?.handleQueue.asyncAfter(deadline: DispatchTime.now() + seconds) { [weak socket] in
             guard let socket = socket else { return }
 
             socket.ackHandlers.timeoutAck(self.ackNumber)
         }
     }
-
 }

@@ -31,7 +31,7 @@ import Foundation
 /// ```swift
 /// socket.rawEmitView.emit("myEvent", myObject)
 /// ```
-public final class SocketRawView : NSObject {
+public final class SocketRawView: NSObject {
     private unowned let socket: SocketIOClient
 
     init(socket: SocketIOClient) {
@@ -47,7 +47,7 @@ public final class SocketRawView : NSObject {
     /// - parameter items: The items to send with this event. May be left out.
     public func emit(_ event: String, _ items: SocketData...) {
         do {
-            try emit(event, with: items.map({ try $0.socketRepresentation() }))
+            try emit(event, with: items.map { try $0.socketRepresentation() })
         } catch {
             DefaultSocketLogger.Logger.error("Error creating socketRepresentation for emit: \(event), \(items)",
                                              type: "SocketIOClient")
@@ -86,7 +86,7 @@ public final class SocketRawView : NSObject {
     /// - returns: An `OnAckCallback`. You must call the `timingOut(after:)` method before the event will be sent.
     public func emitWithAck(_ event: String, _ items: SocketData...) -> OnAckCallback {
         do {
-            return emitWithAck(event, with: try items.map({ try $0.socketRepresentation() }))
+            return emitWithAck(event, with: try items.map { try $0.socketRepresentation() })
         } catch {
             DefaultSocketLogger.Logger.error("Error creating socketRepresentation for emit: \(event), \(items)",
                                              type: "SocketIOClient")
@@ -126,7 +126,7 @@ public final class SocketRawView : NSObject {
 /// ```swift
 /// ack.rawEmitView.with(myObject)
 /// ```
-public final class SocketRawAckView : NSObject {
+public final class SocketRawAckView: NSObject {
     private unowned let socket: SocketIOClient
     private let ackNum: Int
 
@@ -145,7 +145,7 @@ public final class SocketRawAckView : NSObject {
         guard ackNum != -1 else { return }
 
         do {
-            socket.emit(try items.map({ try $0.socketRepresentation() }), ack: ackNum, binary: false, isAck: true)
+            socket.emit(try items.map { try $0.socketRepresentation() }, ack: ackNum, binary: false, isAck: true)
         } catch {
             socket.handleClientEvent(.error, data: [ackNum, items, error])
         }

@@ -6,14 +6,14 @@
 //
 //
 
-import XCTest
 @testable import SocketIO
+import XCTest
 
 class SocketEngineTest: XCTestCase {
     func testBasicPollingMessageV3() {
         let expect = expectation(description: "Basic polling test v3")
 
-        socket.on("blankTest") {data, ack in
+        socket.on("blankTest") { _, _ in
             expect.fulfill()
         }
 
@@ -25,7 +25,7 @@ class SocketEngineTest: XCTestCase {
 
     func testBasicPollingMessage() {
         let expect = expectation(description: "Basic polling test")
-        socket.on("blankTest") {data, ack in
+        socket.on("blankTest") { _, _ in
             expect.fulfill()
         }
 
@@ -37,11 +37,11 @@ class SocketEngineTest: XCTestCase {
         let finalExpectation = expectation(description: "Final packet in poll test")
         var gotBlank = false
 
-        socket.on("blankTest") {data, ack in
+        socket.on("blankTest") { _, _ in
             gotBlank = true
         }
 
-        socket.on("stringTest") {data, ack in
+        socket.on("stringTest") { data, _ in
             if let str = data[0] as? String, gotBlank {
                 if str == "hello" {
                     finalExpectation.fulfill()
@@ -56,7 +56,7 @@ class SocketEngineTest: XCTestCase {
     func testEngineDoesErrorOnUnknownTransport() {
         let finalExpectation = expectation(description: "Unknown Transport")
 
-        socket.on("error") {data, ack in
+        socket.on("error") { data, _ in
             if let error = data[0] as? String, error == "Unknown transport" {
                 finalExpectation.fulfill()
             }
@@ -69,7 +69,7 @@ class SocketEngineTest: XCTestCase {
     func testEngineDoesErrorOnUnknownMessage() {
         let finalExpectation = expectation(description: "Engine Errors")
 
-        socket.on("error") {data, ack in
+        socket.on("error") { _, _ in
             finalExpectation.fulfill()
         }
 
@@ -80,7 +80,7 @@ class SocketEngineTest: XCTestCase {
     func testEngineDecodesUTF8Properly() {
         let expect = expectation(description: "Engine Decodes utf8")
 
-        socket.on("stringTest") {data, ack in
+        socket.on("stringTest") { data, _ in
             XCTAssertEqual(data[0] as? String, "lïne one\nlīne \rtwo𦅙𦅛", "Failed string test")
             expect.fulfill()
         }
@@ -93,14 +93,14 @@ class SocketEngineTest: XCTestCase {
 
     func testEncodeURLProperly() {
         engine.connectParams = [
-            "created": "2016-05-04T18:31:15+0200"
+            "created": "2016-05-04T18:31:15+0200",
         ]
 
         XCTAssertEqual(engine.urlPolling.query, "transport=polling&b64=1&created=2016-05-04T18%3A31%3A15%2B0200&EIO=4")
         XCTAssertEqual(engine.urlWebSocket.query, "transport=websocket&created=2016-05-04T18%3A31%3A15%2B0200&EIO=4")
 
         engine.connectParams = [
-            "forbidden": "!*'();:@&=+$,/?%#[]\" {}^|"
+            "forbidden": "!*'();:@&=+$,/?%#[]\" {}^|",
         ]
 
         XCTAssertEqual(engine.urlPolling.query, "transport=polling&b64=1&forbidden=%21%2A%27%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%25%23%5B%5D%22%20%7B%7D%5E%7C&EIO=4")
@@ -112,7 +112,7 @@ class SocketEngineTest: XCTestCase {
         let b64String = "baGVsbG8NCg=="
         let packetString = "451-[\"test\",{\"test\":{\"_placeholder\":true,\"num\":0}}]"
 
-        socket.on("test") {data, ack in
+        socket.on("test") { data, _ in
             if let data = data[0] as? Data, let string = String(data: data, encoding: .utf8) {
                 XCTAssertEqual(string, "hello")
             }

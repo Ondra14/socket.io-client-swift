@@ -7,7 +7,7 @@ import Foundation
 @testable import SocketIO
 import XCTest
 
-class SocketMangerTest : XCTestCase {
+class SocketMangerTest: XCTestCase {
     func testManagerProperties() {
         XCTAssertNotNil(manager.defaultSocket)
         XCTAssertNil(manager.engine)
@@ -66,7 +66,7 @@ class SocketMangerTest : XCTestCase {
         socket.expectations[ManagerExpectation.didDisconnectCalled] = expectation(description: "The manager should call disconnect on the default socket")
         socket2.expectations[ManagerExpectation.didDisconnectCalled] = expectation(description: "The manager should call disconnect on the socket")
 
-        socket2.on(clientEvent: .connect) {data, ack in
+        socket2.on(clientEvent: .connect) { _, _ in
             self.manager.disconnect()
             self.manager.fakeDisconnecting()
         }
@@ -109,7 +109,7 @@ class SocketMangerTest : XCTestCase {
             .reconnectWait(5),
             .reconnectWaitMax(5),
             .randomizationFactor(0.7),
-            .reconnectAttempts(5)
+            .reconnectAttempts(5),
         ])
 
         XCTAssertEqual(manager.handleQueue, queue)
@@ -154,7 +154,7 @@ public enum ManagerExpectation: String {
 }
 
 public class TestManager: SocketManager {
-    public override func disconnect() {
+    override public func disconnect() {
         setTestStatus(.disconnected)
     }
 
@@ -173,7 +173,7 @@ public class TestManager: SocketManager {
         }
     }
 
-    public override func socket(forNamespace nsp: String) -> SocketIOClient {
+    override public func socket(forNamespace nsp: String) -> SocketIOClient {
         // set socket to our test socket, the superclass method will get this from nsps
         nsps[nsp] = TestSocket(manager: self, nsp: nsp)
 
@@ -184,21 +184,21 @@ public class TestManager: SocketManager {
 public class TestSocket: SocketIOClient {
     public var expectations = [ManagerExpectation: XCTestExpectation]()
 
-    public override func didConnect(toNamespace nsp: String, payload: [String: Any]?) {
+    override public func didConnect(toNamespace nsp: String, payload: [String: Any]?) {
         expectations[ManagerExpectation.didConnectCalled]?.fulfill()
         expectations[ManagerExpectation.didConnectCalled] = nil
 
         super.didConnect(toNamespace: nsp, payload: payload)
     }
 
-    public override func didDisconnect(reason: String) {
+    override public func didDisconnect(reason: String) {
         expectations[ManagerExpectation.didDisconnectCalled]?.fulfill()
         expectations[ManagerExpectation.didDisconnectCalled] = nil
 
         super.didDisconnect(reason: reason)
     }
 
-    public override func emit(_ event: String, _ items: SocketData..., completion: (() -> ())? = nil) {
+    override public func emit(_: String, _: SocketData..., completion _: (() -> Void)? = nil) {
         expectations[ManagerExpectation.emitAllEventCalled]?.fulfill()
         expectations[ManagerExpectation.emitAllEventCalled] = nil
     }

@@ -22,7 +22,7 @@
 import Dispatch
 import Foundation
 
-// TODO Fix the types so that we aren't using concrete types
+// TODO: Fix the types so that we aren't using concrete types
 
 ///
 /// A manager for a socket.io connection.
@@ -45,7 +45,7 @@ import Foundation
 /// To disconnect a socket and remove it from the manager, either call `SocketIOClient.disconnect()` on the socket,
 /// or call one of the `disconnectSocket` methods on this class.
 ///
-public protocol SocketManagerSpec : AnyObject, SocketEngineClient {
+public protocol SocketManagerSpec: AnyObject, SocketEngineClient {
     // MARK: Properties
 
     /// Returns the socket associated with the default namespace ("/").
@@ -57,7 +57,7 @@ public protocol SocketManagerSpec : AnyObject, SocketEngineClient {
     /// If `true` then every time `connect` is called, a new engine will be created.
     var forceNew: Bool { get set }
 
-    // TODO Per socket queues?
+    // TODO: Per socket queues?
     /// The queue that all interaction with the client should occur on. This is the queue that event handlers are
     /// called on.
     var handleQueue: DispatchQueue { get set }

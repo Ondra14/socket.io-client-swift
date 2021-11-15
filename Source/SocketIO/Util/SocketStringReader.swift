@@ -46,7 +46,7 @@ struct SocketStringReader {
     }
 
     mutating func read(count: Int) -> String {
-        let readString = String(message.utf16[currentIndex..<message.utf16.index(currentIndex, offsetBy: count)])!
+        let readString = String(message.utf16[currentIndex ..< message.utf16.index(currentIndex, offsetBy: count)])!
 
         advance(by: count)
 
@@ -64,7 +64,7 @@ struct SocketStringReader {
 
         advance(by: substring.distance(from: substring.startIndex, to: foundIndex) + 1)
 
-        return String(substring[substring.startIndex..<foundIndex])!
+        return String(substring[substring.startIndex ..< foundIndex])!
     }
 
     mutating func readUntilEnd() -> String {

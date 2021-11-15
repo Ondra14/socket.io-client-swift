@@ -46,13 +46,13 @@ public protocol SocketEngineWebsocket: SocketEngineSpec {
     func sendWebSocketMessage(_ str: String,
                               withType type: SocketEnginePacketType,
                               withData datas: [Data],
-                              completion: (() -> ())?)
+                              completion: (() -> Void)?)
 }
 
 // WebSocket methods
 extension SocketEngineWebsocket {
     func probeWebSocket() {
-        if wsConnected  {
+        if wsConnected {
             sendWebSocketMessage("probe", withType: .ping, withData: [], completion: nil)
         }
     }
@@ -68,8 +68,8 @@ extension SocketEngineWebsocket {
     public func sendWebSocketMessage(_ str: String,
                                      withType type: SocketEnginePacketType,
                                      withData data: [Data],
-                                     completion: (() -> ())?
-    ) {
+                                     completion: (() -> Void)?)
+    {
         DefaultSocketLogger.Logger.log("Sending ws: \(str) as type: \(type.rawValue)", type: "SocketEngineWebSocket")
 
         ws?.write(string: "\(type.rawValue)\(str)")

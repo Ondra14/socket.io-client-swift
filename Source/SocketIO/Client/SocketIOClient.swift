@@ -49,7 +49,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     public let nsp: String
 
     /// A handler that will be called on any event.
-    public private(set) var anyHandler: ((SocketAnyEvent) -> ())?
+    public private(set) var anyHandler: ((SocketAnyEvent) -> Void)?
 
     /// The array of handlers for this socket.
     public private(set) var handlers = [SocketEventHandler]()
@@ -122,10 +122,10 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     /// - parameter timeoutAfter: The number of seconds after which if we are not connected we assume the connection
     ///                           has failed. Pass 0 to never timeout.
     /// - parameter handler: The handler to call when the client fails to connect.
-    open func connect(withPayload payload: [String: Any]? = nil, timeoutAfter: Double, withHandler handler: (() -> ())?) {
+    open func connect(withPayload payload: [String: Any]? = nil, timeoutAfter: Double, withHandler handler: (() -> Void)?) {
         assert(timeoutAfter >= 0, "Invalid timeout: \(timeoutAfter)")
 
-        guard let manager = self.manager, status != .connected else {
+        guard let manager = manager, status != .connected else {
             DefaultSocketLogger.Logger.log("Tried connecting on an already connected socket", type: logType)
             return
         }
@@ -148,7 +148,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
 
         guard timeoutAfter != 0 else { return }
 
-        manager.handleQueue.asyncAfter(deadline: DispatchTime.now() + timeoutAfter) {[weak self] in
+        manager.handleQueue.asyncAfter(deadline: DispatchTime.now() + timeoutAfter) { [weak self] in
             guard let this = self, this.status == .connecting || this.status == .notConnected else { return }
 
             this.status = .disconnected
@@ -158,7 +158,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
         }
     }
 
-    func createOnAck(_ items: [Any], binary: Bool = true) -> OnAckCallback {
+    func createOnAck(_ items: [Any], binary _: Bool = true) -> OnAckCallback {
         currentAck += 1
 
         return OnAckCallback(ackNumber: currentAck, items: items, socket: self)
@@ -211,10 +211,10 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     /// - parameter event: The event to send.
     /// - parameter items: The items to send with this event. May be left out.
     /// - parameter completion: Callback called on transport write completion.
-    open func emit(_ event: String, _ items: SocketData..., completion: (() -> ())? = nil)  {
+    open func emit(_ event: String, _ items: SocketData..., completion: (() -> Void)? = nil) {
         emit(event, with: items, completion: completion)
     }
-    
+
     /// Send an event to the server, with optional data items and optional write completion handler.
     ///
     /// If an error occurs trying to transform `items` into their socket representation, a `SocketClientEvent.error`
@@ -223,10 +223,9 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     /// - parameter event: The event to send.
     /// - parameter items: The items to send with this event. May be left out.
     /// - parameter completion: Callback called on transport write completion.
-    open func emit(_ event: String, with items: [SocketData], completion: (() -> ())?) {
-        
+    open func emit(_ event: String, with items: [SocketData], completion: (() -> Void)?) {
         do {
-            emit([event] + (try items.map({ try $0.socketRepresentation() })), completion: completion)
+            emit([event] + (try items.map { try $0.socketRepresentation() }), completion: completion)
         } catch {
             DefaultSocketLogger.Logger.error("Error creating socketRepresentation for emit: \(event), \(items)",
                                              type: logType)
@@ -257,7 +256,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     open func emitWithAck(_ event: String, _ items: SocketData...) -> OnAckCallback {
         emitWithAck(event, with: items)
     }
-    
+
     /// Sends a message to the server, requesting an ack.
     ///
     /// **NOTE**: It is up to the server send an ack back, just calling this method does not mean the server will ack.
@@ -278,9 +277,8 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     /// - parameter items: The items to send with this event. May be left out.
     /// - returns: An `OnAckCallback`. You must call the `timingOut(after:)` method before the event will be sent.
     open func emitWithAck(_ event: String, with items: [SocketData]) -> OnAckCallback {
-        
         do {
-            return createOnAck([event] + (try items.map({ try $0.socketRepresentation() })))
+            return createOnAck([event] + (try items.map { try $0.socketRepresentation() }))
         } catch {
             DefaultSocketLogger.Logger.error("Error creating socketRepresentation for emit: \(event), \(items)",
                                              type: logType)
@@ -295,10 +293,10 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
               ack: Int? = nil,
               binary: Bool = true,
               isAck: Bool = false,
-              completion: (() -> ())? = nil
-    ) {
+              completion: (() -> Void)? = nil)
+    {
         // wrap the completion handler so it always runs async via handlerQueue
-        let wrappedCompletion: (() -> ())? = (completion == nil) ? nil : {[weak self] in
+        let wrappedCompletion: (() -> Void)? = (completion == nil) ? nil : { [weak self] in
             guard let this = self else { return }
             this.manager?.handleQueue.async {
                 completion!()
@@ -421,7 +419,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     open func off(_ event: String) {
         DefaultSocketLogger.Logger.log("Removing handler for event: \(event)", type: logType)
 
-        handlers = handlers.filter({ $0.event != event })
+        handlers = handlers.filter { $0.event != event }
     }
 
     /// Removes a handler with the specified UUID gotten from an `on` or `once`
@@ -432,7 +430,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     open func off(id: UUID) {
         DefaultSocketLogger.Logger.log("Removing handler with id: \(id)", type: logType)
 
-        handlers = handlers.filter({ $0.id != id })
+        handlers = handlers.filter { $0.id != id }
     }
 
     /// Adds a handler for an event.
@@ -489,7 +487,7 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
 
         let id = UUID()
 
-        let handler = SocketEventHandler(event: event, id: id) {[weak self] data, ack in
+        let handler = SocketEventHandler(event: event, id: id) { [weak self] data, ack in
             guard let this = self else { return }
             this.off(id: id)
             callback(data, ack)
@@ -503,13 +501,13 @@ open class SocketIOClient: NSObject, SocketIOClientSpec {
     /// Adds a handler that will be called on every event.
     ///
     /// - parameter handler: The callback that will execute whenever an event is received.
-    open func onAny(_ handler: @escaping (SocketAnyEvent) -> ()) {
+    open func onAny(_ handler: @escaping (SocketAnyEvent) -> Void) {
         anyHandler = handler
     }
 
     /// Tries to reconnect to the server.
     @available(*, unavailable, message: "Call the manager's reconnect method")
-    open func reconnect() { }
+    open func reconnect() {}
 
     /// Removes all handlers.
     ///

@@ -23,7 +23,7 @@
 //  THE SOFTWARE.
 
 /// An array-like type that holds `SocketIOClientOption`s
-public struct SocketIOClientConfiguration : ExpressibleByArrayLiteral, Collection, MutableCollection {
+public struct SocketIOClientConfiguration: ExpressibleByArrayLiteral, Collection, MutableCollection {
     // MARK: Typealiases
 
     /// Type of element stored.
@@ -36,7 +36,7 @@ public struct SocketIOClientConfiguration : ExpressibleByArrayLiteral, Collectio
     public typealias Iterator = Array<SocketIOClientOption>.Iterator
 
     /// SubSequence type.
-    public typealias SubSequence =  Array<SocketIOClientOption>.SubSequence
+    public typealias SubSequence = Array<SocketIOClientOption>.SubSequence
 
     // MARK: Properties
 
@@ -115,7 +115,7 @@ public struct SocketIOClientConfiguration : ExpressibleByArrayLiteral, Collectio
     /// - parameter element: The element to insert.
     /// - parameter replacing: Whether to replace any occurrences of element to the new item. Default is `true`.
     public mutating func insert(_ element: Element, replacing replace: Bool = true) {
-        for i in 0..<backingArray.count where backingArray[i] == element {
+        for i in 0 ..< backingArray.count where backingArray[i] == element {
             guard replace else { return }
 
             backingArray[i] = element

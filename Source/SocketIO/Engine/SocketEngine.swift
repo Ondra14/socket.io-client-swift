@@ -29,7 +29,8 @@ import Starscream
 /// The class that handles the engine.io protocol and transports.
 /// See `SocketEnginePollable` and `SocketEngineWebsocket` for transport specific methods.
 open class SocketEngine:
-        NSObject, WebSocketDelegate, URLSessionDelegate, SocketEnginePollable, SocketEngineWebsocket, ConfigSettable {
+    NSObject, WebSocketDelegate, URLSessionDelegate, SocketEnginePollable, SocketEngineWebsocket, ConfigSettable
+{
     // MARK: Properties
 
     private static let logType = "SocketEngine"
@@ -207,7 +208,7 @@ open class SocketEngine:
     private func handleBase64(message: String) {
         let offset = version.rawValue >= 3 ? 1 : 2
         // binary in base64 string
-        let noPrefix = String(message[message.index(message.startIndex, offsetBy: offset)..<message.endIndex])
+        let noPrefix = String(message[message.index(message.startIndex, offsetBy: offset) ..< message.endIndex])
 
         if let data = Data(base64Encoded: noPrefix, options: .ignoreUnknownCharacters) {
             client?.parseEngineBinaryData(data)
@@ -276,7 +277,7 @@ open class SocketEngine:
             urlWebSocket.scheme = "ws"
         }
 
-        if let connectParams = self.connectParams {
+        if let connectParams = connectParams {
             for (key, value) in connectParams {
                 let keyEsc = key.urlEncode()!
                 let valueEsc = "\(value)".urlEncode()!
@@ -331,7 +332,7 @@ open class SocketEngine:
     }
 
     private func _disconnect(reason: String) {
-        guard connected && !closed else { return closeOutEngine(reason: reason) }
+        guard connected, !closed else { return closeOutEngine(reason: reason) }
 
         DefaultSocketLogger.Logger.log("Engine is being closed.", type: SocketEngine.logType)
 
@@ -348,7 +349,7 @@ open class SocketEngine:
     private func disconnectPolling(reason: String) {
         postWait.append((String(SocketEnginePacketType.close.rawValue), {}))
 
-        doRequest(for: createRequestForPostWithPostWait()) {_, _, _ in }
+        doRequest(for: createRequestForPostWithPostWait()) { _, _, _ in }
         closeOutEngine(reason: reason)
     }
 
@@ -393,7 +394,7 @@ open class SocketEngine:
     ///
     /// **You shouldn't call this directly**
     open func flushWaitingForPostToWebSocket() {
-        guard let ws = self.ws else { return }
+        guard let ws = ws else { return }
 
         for msg in postWait {
             ws.write(string: msg.msg, completion: msg.completion)
@@ -444,7 +445,7 @@ open class SocketEngine:
             self.pingTimeout = pingTimeout
         }
 
-        if !forcePolling && !forceWebsockets && upgradeWs {
+        if !forcePolling, !forceWebsockets, upgradeWs {
             createWebSocketAndConnect()
         }
 
@@ -475,7 +476,7 @@ open class SocketEngine:
         client?.engineDidReceivePong()
     }
 
-    private func handlePing(with message: String) {
+    private func handlePing(with _: String) {
         if version.rawValue >= 3 {
             write("", withType: .pong, withData: [])
         }
@@ -484,11 +485,11 @@ open class SocketEngine:
     }
 
     private func checkPings() {
-        let pingInterval = self.pingInterval ?? 25_000
+        let pingInterval = self.pingInterval ?? 25000
         let deadlineMs = Double(pingInterval + pingTimeout) / 1000
         let timeoutDeadline = DispatchTime.now() + .milliseconds(pingInterval + pingTimeout)
 
-        engineQueue.asyncAfter(deadline: timeoutDeadline) {[weak self, id = self.sid] in
+        engineQueue.asyncAfter(deadline: timeoutDeadline) { [weak self, id = self.sid] in
             // Make sure not to ping old connections
             guard let this = self, this.sid == id else { return }
 
@@ -508,7 +509,7 @@ open class SocketEngine:
 
         lastCommunication = Date()
 
-        client?.parseEngineBinaryData(version.rawValue >= 3 ? data : data.subdata(in: 1..<data.endIndex))
+        client?.parseEngineBinaryData(version.rawValue >= 3 ? data : data.subdata(in: 1 ..< data.endIndex))
     }
 
     /// Parses a raw engine.io packet.
@@ -578,7 +579,7 @@ open class SocketEngine:
         pongsMissed += 1
         write("", withType: .ping, withData: [], completion: nil)
 
-        engineQueue.asyncAfter(deadline: .now() + .milliseconds(pingInterval)) {[weak self, id = self.sid] in
+        engineQueue.asyncAfter(deadline: .now() + .milliseconds(pingInterval)) { [weak self, id = self.sid] in
             // Make sure not to ping old connections
             guard let this = self, this.sid == id else {
                 return
@@ -619,11 +620,11 @@ open class SocketEngine:
             case let .selfSigned(selfSigned):
                 self.selfSigned = selfSigned
             case let .security(pinner):
-                self.certPinner = pinner
+                certPinner = pinner
             case .compress:
-                self.compress = true
+                compress = true
             case .enableSOCKSProxy:
-                self.enableSOCKSProxy = true
+                enableSOCKSProxy = true
             case let .version(num):
                 version = num
             default:
@@ -649,7 +650,7 @@ open class SocketEngine:
     /// - parameter type: The type of this message.
     /// - parameter data: Any data that this message has.
     /// - parameter completion: Callback called on transport write completion.
-    open func write(_ msg: String, withType type: SocketEnginePacketType, withData data: [Data], completion: (() -> ())? = nil) {
+    open func write(_ msg: String, withType type: SocketEnginePacketType, withData data: [Data], completion: (() -> Void)? = nil) {
         engineQueue.async {
             guard self.connected else {
                 completion?()
@@ -721,11 +722,11 @@ open class SocketEngine:
     }
 }
 
-extension SocketEngine {
+public extension SocketEngine {
     // MARK: URLSessionDelegate methods
 
     /// Delegate called when the session becomes invalid.
-    public func URLSession(session: URLSession, didBecomeInvalidWithError error: NSError?) {
+    func URLSession(session _: URLSession, didBecomeInvalidWithError _: NSError?) {
         DefaultSocketLogger.Logger.error("Engine URLSession became invalid", type: "SocketEngine")
 
         didError(reason: "Engine URLSession became invalid")
@@ -736,13 +737,13 @@ enum EngineError: Error {
     case canceled
 }
 
-extension SocketEngine {
+public extension SocketEngine {
     /// Delegate method for WebSocketDelegate.
     ///
     /// - Parameters:
     ///   - event: WS Event
     ///   - _:
-    public func didReceive(event: WebSocketEvent, client _: WebSocket) {
+    func didReceive(event: WebSocketEvent, client _: WebSocket) {
         switch event {
         case let .connected(headers):
             wsConnected = true

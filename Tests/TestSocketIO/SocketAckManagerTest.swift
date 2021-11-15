@@ -6,17 +6,17 @@
 //
 //
 
-import XCTest
 @testable import SocketIO
+import XCTest
 
-class SocketAckManagerTest : XCTestCase {
+class SocketAckManagerTest: XCTestCase {
     var ackManager = SocketAckManager()
 
     func testAddAcks() {
         let callbackExpection = expectation(description: "callbackExpection")
         let itemsArray = ["Hi", "ho"]
 
-        func callback(_ items: [Any]) {
+        func callback(_: [Any]) {
             callbackExpection.fulfill()
         }
 

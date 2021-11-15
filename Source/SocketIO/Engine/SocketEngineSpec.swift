@@ -141,7 +141,7 @@ public protocol SocketEngineSpec: class {
     /// - parameter type: The type of this message.
     /// - parameter data: Any data that this message has.
     /// - parameter completion: Callback called on transport write completion.
-    func write(_ msg: String, withType type: SocketEnginePacketType, withData data: [Data], completion: (() -> ())?)
+    func write(_ msg: String, withType type: SocketEnginePacketType, withData data: [Data], completion: (() -> Void)?)
 }
 
 extension SocketEngineSpec {
@@ -173,7 +173,6 @@ extension SocketEngineSpec {
             com.percentEncodedQuery = com.percentEncodedQuery! + engineIOParam
         }
 
-
         return com.url!
     }
 
@@ -203,7 +202,7 @@ extension SocketEngineSpec {
     }
 
     /// Send an engine message (4)
-    func send(_ msg: String, withData datas: [Data], completion: (() -> ())? = nil) {
+    func send(_ msg: String, withData datas: [Data], completion: (() -> Void)? = nil) {
         write(msg, withType: .message, withData: datas, completion: completion)
     }
 }

@@ -65,7 +65,7 @@ public protocol SocketEnginePollable: SocketEngineSpec {
     /// - parameter message: The message to send.
     /// - parameter withType: The type of message to send.
     /// - parameter withData: The data associated with this message.
-    func sendPollMessage(_ message: String, withType type: SocketEnginePacketType, withData datas: [Data], completion: (() -> ())?)
+    func sendPollMessage(_ message: String, withType type: SocketEnginePacketType, withData datas: [Data], completion: (() -> Void)?)
 
     /// Call to stop polling and invalidate the URLSession.
     func stopPolling()
@@ -82,7 +82,7 @@ extension SocketEnginePollable {
         var postStr = ""
 
         if version.rawValue >= 3 {
-            postStr = postWait.lazy.map({ $0.msg }).joined(separator: "\u{1e}")
+            postStr = postWait.lazy.map { $0.msg }.joined(separator: "\u{1e}")
         } else {
             for packet in postWait {
                 postStr += "\(packet.msg.utf16.count):\(packet.msg)"
@@ -108,7 +108,7 @@ extension SocketEnginePollable {
     ///
     /// You shouldn't need to call this directly, the engine should automatically maintain a long-poll request.
     public func doPoll() {
-        guard polling && !waitingForPoll && connected && !closed else { return }
+        guard polling, !waitingForPoll, connected, !closed else { return }
 
         var req = URLRequest(url: urlPollingWithSid)
         addHeaders(to: &req)
@@ -116,8 +116,8 @@ extension SocketEnginePollable {
         doLongPoll(for: req)
     }
 
-    func doRequest(for req: URLRequest, callbackWith callback: @escaping (Data?, URLResponse?, Error?) -> ()) {
-        guard polling && !closed && !invalidated && !fastUpgrade else { return }
+    func doRequest(for req: URLRequest, callbackWith callback: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        guard polling, !closed, !invalidated, !fastUpgrade else { return }
 
         DefaultSocketLogger.Logger.log("Doing polling \(req.httpMethod ?? "") \(req)", type: "SocketEnginePolling")
 
@@ -127,7 +127,7 @@ extension SocketEnginePollable {
     func doLongPoll(for req: URLRequest) {
         waitingForPoll = true
 
-        doRequest(for: req) {[weak self] data, res, err in
+        doRequest(for: req) { [weak self] data, res, err in
             guard let this = self, this.polling else { return }
             guard let data = data, let res = res as? HTTPURLResponse, res.statusCode == 200 else {
                 if let err = err {
@@ -153,14 +153,14 @@ extension SocketEnginePollable {
 
             if this.fastUpgrade {
                 this.doFastUpgrade()
-            } else if !this.closed && this.polling {
+            } else if !this.closed, this.polling {
                 this.doPoll()
             }
         }
     }
 
     private func flushWaitingForPost() {
-        guard postWait.count != 0 && connected else { return }
+        guard postWait.count != 0, connected else { return }
         guard polling else {
             flushWaitingForPostToWebSocket()
 
@@ -173,7 +173,7 @@ extension SocketEnginePollable {
 
         DefaultSocketLogger.Logger.log("POSTing", type: "SocketEnginePolling")
 
-        doRequest(for: req) {[weak self] _, res, err in
+        doRequest(for: req) { [weak self] _, res, err in
             guard let this = self else { return }
             guard let res = res as? HTTPURLResponse, res.statusCode == 200 else {
                 if let err = err {
@@ -237,7 +237,7 @@ extension SocketEnginePollable {
     /// - parameter withType: The type of message to send.
     /// - parameter withData: The data associated with this message.
     /// - parameter completion: Callback called on transport write completion.
-    public func sendPollMessage(_ message: String, withType type: SocketEnginePacketType, withData datas: [Data], completion: (() -> ())? = nil) {
+    public func sendPollMessage(_ message: String, withType type: SocketEnginePacketType, withData datas: [Data], completion: (() -> Void)? = nil) {
         DefaultSocketLogger.Logger.log("Sending poll: \(message) as type: \(type.rawValue)", type: "SocketEnginePolling")
 
         postWait.append((String(type.rawValue) + message, completion))

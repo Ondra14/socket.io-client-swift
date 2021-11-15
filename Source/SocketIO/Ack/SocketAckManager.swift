@@ -26,7 +26,7 @@ import Dispatch
 import Foundation
 
 /// The status of an ack.
-public enum SocketAckStatus : String {
+public enum SocketAckStatus: String {
     // MARK: Cases
 
     /// The ack timed out.
@@ -43,7 +43,7 @@ public enum SocketAckStatus : String {
     }
 }
 
-private struct SocketAck : Hashable {
+private struct SocketAck: Hashable {
     let ack: Int
     var callback: AckCallback!
 
@@ -60,11 +60,11 @@ private struct SocketAck : Hashable {
         ack.hash(into: &hasher)
     }
 
-    fileprivate static func <(lhs: SocketAck, rhs: SocketAck) -> Bool {
+    fileprivate static func < (lhs: SocketAck, rhs: SocketAck) -> Bool {
         return lhs.ack < rhs.ack
     }
 
-    fileprivate static func ==(lhs: SocketAck, rhs: SocketAck) -> Bool {
+    fileprivate static func == (lhs: SocketAck, rhs: SocketAck) -> Bool {
         return lhs.ack == rhs.ack
     }
 }
@@ -83,6 +83,6 @@ class SocketAckManager {
 
     /// Should be called on handle queue
     func timeoutAck(_ ack: Int) {
-       acks.remove(SocketAck(ack: ack))?.callback?([SocketAckStatus.noAck.rawValue])
+        acks.remove(SocketAck(ack: ack))?.callback?([SocketAckStatus.noAck.rawValue])
     }
 }

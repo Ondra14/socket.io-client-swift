@@ -23,7 +23,7 @@
 import Foundation
 
 /// Defines that a type will be able to parse socket.io-protocol messages.
-public protocol SocketParsable : AnyObject {
+public protocol SocketParsable: AnyObject {
     // MARK: Methods
 
     /// Called when the engine has received some binary data that should be attached to a packet.
@@ -43,7 +43,7 @@ public protocol SocketParsable : AnyObject {
 }
 
 /// Errors that can be thrown during parsing.
-public enum SocketParsableError : Error {
+public enum SocketParsableError: Error {
     // MARK: Cases
 
     /// Thrown when a packet received has an invalid data array, or is missing the data array.
@@ -57,7 +57,7 @@ public enum SocketParsableError : Error {
 }
 
 /// Says that a type will be able to buffer binary data before all data for an event has come in.
-public protocol SocketDataBufferable : AnyObject {
+public protocol SocketDataBufferable: AnyObject {
     // MARK: Properties
 
     /// A list of packets that are waiting for binary data.
@@ -118,7 +118,7 @@ public extension SocketParsable where Self: SocketManagerSpec & SocketDataBuffer
 
         var dataArray = String(message.utf16[message.utf16.index(reader.currentIndex, offsetBy: 1)...])!
 
-        if (type == .error || type == .connect) && !dataArray.hasPrefix("[") && !dataArray.hasSuffix("]") {
+        if type == .error || type == .connect, !dataArray.hasPrefix("["), !dataArray.hasSuffix("]") {
             dataArray = "[" + dataArray + "]"
         }
 

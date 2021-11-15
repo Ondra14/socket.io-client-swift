@@ -142,7 +142,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
     /// - parameter socketURL: The url of the socket.io server.
     /// - parameter config: The config for this socket.
     public init(socketURL: URL, config: SocketIOClientConfiguration = []) {
-        self._config = config
+        _config = config
         self.socketURL = socketURL
 
         super.init()
@@ -186,7 +186,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
     ///
     /// Override if you wish to attach a custom `SocketEngineSpec`.
     open func connect() {
-        guard !status.active else {
+        if status == .connected || (status == .connecting && currentReconnectAttempt == 0) {
             DefaultSocketLogger.Logger.log("Tried connecting an already active socket", type: SocketManager.logType)
 
             return
@@ -216,9 +216,10 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
 
         var payloadStr = ""
 
-        if version.rawValue >= 3 && payload != nil,
+        if version.rawValue >= 3, payload != nil,
            let payloadData = try? JSONSerialization.data(withJSONObject: payload!, options: .fragmentsAllowed),
-           let jsonString = String(data: payloadData, encoding: .utf8) {
+           let jsonString = String(data: payloadData, encoding: .utf8)
+        {
             payloadStr = jsonString
         }
 
@@ -229,7 +230,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
     ///
     /// - parameter reason: The reason for the disconnection.
     open func didDisconnect(reason: String) {
-        forAll {socket in
+        forAll { socket in
             socket.didDisconnect(reason: reason)
         }
     }
@@ -276,7 +277,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
     ///
     /// - parameter clientEvent: The event to emit.
     open func emitAll(clientEvent event: SocketClientEvent, data: [Any]) {
-        forAll {socket in
+        forAll { socket in
             socket.handleClientEvent(event, data: data)
         }
     }
@@ -293,7 +294,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
             return
         }
 
-        forAll {socket in
+        forAll { socket in
             socket.emit([event] + emitData)
         }
     }
@@ -356,7 +357,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
         }
 
         for (nsp, socket) in nsps where socket.status == .connecting {
-            if version.rawValue < 3 && nsp == "/" {
+            if version.rawValue < 3, nsp == "/" {
                 continue
             }
 
@@ -408,7 +409,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
         emitAll(clientEvent: .pong, data: [])
     }
 
-    private func forAll(do: (SocketIOClient) throws -> ()) rethrows {
+    private func forAll(do: (SocketIOClient) throws -> Void) rethrows {
         for (_, socket) in nsps {
             try `do`(socket)
         }
@@ -422,7 +423,8 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
             self._engineDidWebsocketUpgrade(headers: headers)
         }
     }
-     private func _engineDidWebsocketUpgrade(headers: [String: String]) {
+
+    private func _engineDidWebsocketUpgrade(headers: [String: String]) {
         emitAll(clientEvent: .websocketUpgrade, data: [headers])
     }
 
@@ -489,7 +491,7 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
         DefaultSocketLogger.Logger.log("Starting reconnect", type: SocketManager.logType)
 
         // Set status to connecting and emit reconnect for all sockets
-        forAll {socket in
+        forAll { socket in
             guard socket.status == .connected else { return }
 
             socket.setReconnecting(reason: reason)
@@ -499,18 +501,18 @@ open class SocketManager: NSObject, SocketManagerSpec, SocketParsable, SocketDat
     }
 
     private func _tryReconnect() {
-        guard reconnects && reconnecting && status != .disconnected else { return }
+        guard reconnects, reconnecting, status != .disconnected else { return }
 
-        if reconnectAttempts != -1 && currentReconnectAttempt + 1 > reconnectAttempts {
+        if reconnectAttempts != -1, currentReconnectAttempt + 1 > reconnectAttempts {
             return didDisconnect(reason: "Reconnect Failed")
         }
 
         DefaultSocketLogger.Logger.log("Trying to reconnect", type: SocketManager.logType)
 
-        forAll {socket in
+        forAll { socket in
             guard socket.status == .connecting else { return }
 
-            socket.handleClientEvent(.reconnectAttempt, data: [(reconnectAttempts - currentReconnectAttempt)])
+            socket.handleClientEvent(.reconnectAttempt, data: [reconnectAttempts - currentReconnectAttempt])
         }
 
         currentReconnectAttempt += 1
